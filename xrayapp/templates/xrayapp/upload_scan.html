@@ -1,0 +1,176 @@
+{% extends 'xrayapp/base.html' %}
+{% block title %}Analyze X-Ray — Easy X-Ray{% endblock %}
+{% block breadcrumb %}Analyze X-Ray{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">🔬 X-Ray Analysis</h1>
+  <p class="page-subtitle">Upload a chest X-ray for AI-powered diagnosis with Grad-CAM visualization</p>
+</div>
+
+<div class="grid-2" style="gap:28px;align-items:start;">
+  <!-- Upload Form -->
+  <div class="fade-in">
+    <div class="card mb-20">
+      <div class="card-title mb-20"><i class="fas fa-user text-cyan"></i> Patient Selection</div>
+      <form method="post" enctype="multipart/form-data" data-loading id="scan-upload-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label class="form-label" for="patient_id">Select Patient <span>*</span></label>
+          <select class="form-control" name="patient_id" id="patient_id" required>
+            <option value="">— Choose a patient —</option>
+            {% for patient in patients %}
+              <option value="{{ patient.pk }}">
+                {{ patient.full_name }} ({{ patient.patient_id }}) · Age {{ patient.age }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% if not patients %}
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            No patients registered. <a href="{% url 'add_patient' %}" style="color:inherit;font-weight:700;">Register one first</a>.
+          </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label" for="radiologist">Radiologist / Physician</label>
+          <input type="text" class="form-control" name="radiologist" id="radiologist"
+                 placeholder="Dr. Name (optional)">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="doctor_notes">Clinical Notes</label>
+          <textarea class="form-control" name="doctor_notes" id="doctor_notes"
+                    placeholder="Patient symptoms, history, or any relevant clinical notes..."></textarea>
+        </div>
+      </div>
+
+      <!-- Upload Zone -->
+      <div class="card mb-20">
+        <div class="card-title mb-20"><i class="fas fa-upload text-cyan"></i> Upload X-Ray Image</div>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" name="xray_image" id="xray_image" accept="image/*" required form="scan-upload-form">
+          <span class="upload-icon">🫁</span>
+          <div class="upload-title">Drop X-Ray here or click to browse</div>
+          <div class="upload-hint">Supports JPG, PNG, DICOM-preview · Max 20MB</div>
+          <div class="upload-preview" id="uploadPreview">
+            <img id="previewImg" src="" alt="Preview">
+            <div style="margin-top:8px;font-size:12px;color:var(--accent-cyan);font-weight:600;" id="previewName"></div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-cyan btn-lg w-full" id="analyzeBtn"
+              form="scan-upload-form" style="justify-content:center;font-size:16px;"
+              {% if not patients %}disabled{% endif %}>
+        <i class="fas fa-brain"></i> Analyze with AI
+      </button>
+      </form>
+  </div>
+
+  <!-- How it works -->
+  <div class="fade-in">
+    <div class="card mb-20">
+      <div class="card-title mb-20"><i class="fas fa-circle-info text-cyan"></i> How It Works</div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        {% for step in "1234"|make_list %}
+        <div style="display:flex;gap:14px;align-items:flex-start;">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent-blue),var(--accent-cyan));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;flex-shrink:0;">{{ step }}</div>
+          <div>
+            {% if step == "1" %}
+              <div style="font-weight:700;font-size:13.5px;color:var(--text-primary);">Register Patient</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Add the patient record with demographics</div>
+            {% elif step == "2" %}
+              <div style="font-weight:700;font-size:13.5px;color:var(--text-primary);">Upload X-Ray</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Drag & drop or select the chest X-ray image</div>
+            {% elif step == "3" %}
+              <div style="font-weight:700;font-size:13.5px;color:var(--text-primary);">AI Analysis</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">ResNet-50 model classifies and Grad-CAM highlights regions</div>
+            {% elif step == "4" %}
+              <div style="font-weight:700;font-size:13.5px;color:var(--text-primary);">Download Report</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Export a professional PDF medical report</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- AI Capabilities -->
+    <div class="card">
+      <div class="card-title mb-16"><i class="fas fa-robot text-cyan"></i> AI Capabilities</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(244,67,54,0.06);border-radius:10px;border:1px solid rgba(244,67,54,0.15);">
+          <span style="font-size:24px;">🦠</span>
+          <div>
+            <div style="font-weight:700;font-size:13px;color:#ff5252;">COVID-19 Detection</div>
+            <div style="font-size:11px;color:var(--text-muted);">Identifies COVID-19 patterns in lung X-rays</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(0,230,118,0.06);border-radius:10px;border:1px solid rgba(0,230,118,0.15);">
+          <span style="font-size:24px;">✅</span>
+          <div>
+            <div style="font-weight:700;font-size:13px;color:var(--accent-green);">Normal Classification</div>
+            <div style="font-size:11px;color:var(--text-muted);">Confirms healthy chest X-ray appearance</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,145,0,0.06);border-radius:10px;border:1px solid rgba(255,145,0,0.15);">
+          <span style="font-size:24px;">🫁</span>
+          <div>
+            <div style="font-weight:700;font-size:13px;color:#ffab40;">Pneumonia Detection</div>
+            <div style="font-size:11px;color:var(--text-muted);">Detects bacterial/viral pneumonia markers</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(0,229,255,0.06);border-radius:10px;border:1px solid rgba(0,229,255,0.15);">
+          <span style="font-size:24px;">🔥</span>
+          <div>
+            <div style="font-weight:700;font-size:13px;color:var(--accent-cyan);">Grad-CAM Heatmap</div>
+            <div style="font-size:11px;color:var(--text-muted);">Visual explanation of AI decision regions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const input = document.getElementById('xray_image');
+const previewImg = document.getElementById('previewImg');
+const previewName = document.getElementById('previewName');
+const uploadPreview = document.getElementById('uploadPreview');
+const uploadZone = document.getElementById('uploadZone');
+
+if (input) {
+  input.addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+      previewImg.src = URL.createObjectURL(file);
+      previewName.textContent = file.name;
+      uploadPreview.style.display = 'block';
+    }
+  });
+}
+
+// Upload zone drag events
+if (uploadZone) {
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && input) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change'));
+    }
+  });
+}
+</script>
+{% endblock %}

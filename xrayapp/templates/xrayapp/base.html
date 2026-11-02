@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Easy X-Ray — AI Medical Diagnostic System{% endblock %}</title>
+  <meta name="description" content="Easy X-Ray: AI-powered chest X-ray analysis for COVID-19, Pneumonia and Normal classification with Grad-CAM heatmaps.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">🔬 Analyzing X-Ray with AI...</div>
+</div>
+
+<div class="app-layout">
+  <!-- ── Sidebar ──────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">🫁</div>
+      <div>
+        <div class="sidebar-title">Easy X-Ray</div>
+        <div class="sidebar-subtitle">AI Diagnostic System</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+
+      <a href="{% url 'dashboard' %}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}" id="nav-dashboard">
+        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+        Dashboard
+      </a>
+
+      <a href="{% url 'upload_scan' %}" class="nav-item {% if active_page == 'scan' %}active{% endif %}" id="nav-scan">
+        <span class="nav-icon"><i class="fas fa-x-ray"></i></span>
+        Analyze X-Ray
+      </a>
+
+      <a href="{% url 'scan_list' %}" class="nav-item {% if active_page == 'scans' %}active{% endif %}" id="nav-scans">
+        <span class="nav-icon"><i class="fas fa-microscope"></i></span>
+        Scan Records
+      </a>
+
+      <div class="nav-section-label" style="margin-top:8px;">Patients</div>
+
+      <a href="{% url 'patient_list' %}" class="nav-item {% if active_page == 'patients' %}active{% endif %}" id="nav-patients">
+        <span class="nav-icon"><i class="fas fa-users"></i></span>
+        All Patients
+      </a>
+
+      <a href="{% url 'add_patient' %}" class="nav-item" id="nav-add-patient">
+        <span class="nav-icon"><i class="fas fa-user-plus"></i></span>
+        Add Patient
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-badge">
+        <div class="badge-dot"></div>
+        <div>
+          <div class="badge-text">AI Model Active</div>
+          <div style="font-size:10px;color:var(--text-muted);">ResNet50 v1.0</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────────────── -->
+  <div class="main-content">
+
+    <!-- Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <div class="breadcrumb">
+          <i class="fas fa-home" style="color:var(--text-muted);font-size:12px;"></i>
+          <span style="color:var(--text-muted);">/</span>
+          <span>{% block breadcrumb %}Dashboard{% endblock %}</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <a href="{% url 'upload_scan' %}" class="btn btn-cyan btn-sm" id="header-analyze-btn">
+          <i class="fas fa-plus"></i> New Scan
+        </a>
+        <div class="user-avatar" title="Administrator">DR</div>
+      </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div style="padding: 16px 28px 0;">
+      {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} fade-in">
+          <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Page Content -->
+    <div class="page-content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+<script>
+// Drag & Drop for upload zones
+document.querySelectorAll('.upload-zone').forEach(zone => {
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('drag-over');
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const input = zone.querySelector('input[type="file"]');
+      if (input) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        input.dispatchEvent(new Event('change'));
+      }
+    }
+  });
+});
+
+// Image preview
+document.querySelectorAll('input[type="file"][accept*="image"]').forEach(input => {
+  input.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const preview = this.closest('.upload-zone')?.querySelector('.upload-preview');
+    if (preview) {
+      const img = preview.querySelector('img') || document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      preview.appendChild(img);
+      preview.style.display = 'block';
+    }
+  });
+});
+
+// Loading overlay on form submit
+document.querySelectorAll('form[data-loading]').forEach(form => {
+  form.addEventListener('submit', () => {
+    document.getElementById('loadingOverlay').classList.add('show');
+  });
+});
+
+// Animate numbers
+function animateNumbers() {
+  document.querySelectorAll('.stat-value[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target, 10);
+    let current = 0;
+    const step = Math.max(1, Math.ceil(target / 60));
+    const interval = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = current.toLocaleString();
+      if (current >= target) clearInterval(interval);
+    }, 16);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', animateNumbers);
+</script>
+
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,62 @@
+# Python & Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
+*.log
+local_settings.py
+staticfiles/
+
+# Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Node / Vite Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Datasets (Strictly Excluded)
+dataset/
+detector_data/
+cifar_temp/
+archive.zip
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+data/
+
+# Large Model Weights (Binary Weights > 40MB)
+models/*.pth
+models/*.pt
+models/*.bin
+models/*.onnx
+!models/README.md
+!models/.gitkeep
+
+# Runtime Media Uploads & Temp Files
+media/uploads/*
+media/heatmaps/*
+media/temp_val/*
+media/scans/*
+!media/uploads/.gitkeep
+!media/heatmaps/.gitkeep
+!media/temp_val/.gitkeep
+!media/scans/.gitkeep
+
+# OS & IDE Cache
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

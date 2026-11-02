@@ -1,0 +1,238 @@
+{% extends 'xrayapp/base.html' %}
+{% block title %}Dashboard — Easy X-Ray{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Clinical Dashboard</h1>
+  <p class="page-subtitle">Real-time X-ray diagnostics overview — AI-powered chest analysis</p>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-cards fade-in">
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-value" data-target="{{ total_patients }}">0</div>
+    <div class="stat-label">Total Patients</div>
+  </div>
+  <div class="stat-card cyan">
+    <div class="stat-icon"><i class="fas fa-x-ray"></i></div>
+    <div class="stat-value" data-target="{{ total_scans }}">0</div>
+    <div class="stat-label">Total Scans</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon"><i class="fas fa-virus"></i></div>
+    <div class="stat-value" data-target="{{ covid_cases }}">0</div>
+    <div class="stat-label">COVID-19 Cases</div>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-icon"><i class="fas fa-lungs-virus"></i></div>
+    <div class="stat-value" data-target="{{ pneumonia_cases }}">0</div>
+    <div class="stat-label">Pneumonia Cases</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-value" data-target="{{ normal_cases }}">0</div>
+    <div class="stat-label">Normal Scans</div>
+  </div>
+</div>
+
+<div class="grid-2" style="gap:24px; margin-bottom:24px;">
+  <!-- Recent Scans -->
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-clock-rotate-left text-cyan"></i> Recent Scans</div>
+      <a href="{% url 'scan_list' %}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+
+    {% if recent_scans %}
+      {% for scan in recent_scans %}
+      <a href="{% url 'scan_result' scan.pk %}" class="scan-item">
+        {% if scan.image %}
+          <img src="{{ scan.image.url }}" alt="X-Ray" class="scan-thumb">
+        {% else %}
+          <div class="scan-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;">🫁</div>
+        {% endif %}
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13.5px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {{ scan.patient.full_name }}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+            {{ scan.scan_id }} · {{ scan.scan_date|date:"d M Y" }}
+          </div>
+        </div>
+        <span class="badge {% if scan.diagnosis == 'COVID-19' %}badge-covid{% elif scan.diagnosis == 'Normal' %}badge-normal{% elif scan.diagnosis == 'Pneumonia' %}badge-pneumonia{% else %}badge-pending{% endif %}">
+          {{ scan.diagnosis }}
+        </span>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🔬</div>
+        <p>No scans yet. <a href="{% url 'upload_scan' %}" style="color:var(--accent-cyan);">Analyze an X-ray</a></p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Diagnosis Distribution Chart -->
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-chart-pie text-cyan"></i> Diagnosis Distribution</div>
+    </div>
+
+    {% if total_scans > 0 %}
+    <!-- Donut Chart -->
+    <div style="position:relative;margin:8px auto 20px;width:200px;height:200px;">
+      <canvas id="diagChart" width="200" height="200"></canvas>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+        <div style="font-size:26px;font-weight:900;color:var(--text-primary);">{{ total_scans }}</div>
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Scans</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:12px;height:12px;border-radius:3px;background:#f44336;"></div>
+          <span style="font-size:13px;color:var(--text-secondary);">COVID-19</span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:#ff5252;">{{ covid_cases }}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:12px;height:12px;border-radius:3px;background:#00e676;"></div>
+          <span style="font-size:13px;color:var(--text-secondary);">Normal</span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:#00e676;">{{ normal_cases }}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:12px;height:12px;border-radius:3px;background:#ff9100;"></div>
+          <span style="font-size:13px;color:var(--text-secondary);">Pneumonia</span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:#ffab40;">{{ pneumonia_cases }}</span>
+      </div>
+    </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <p>No data yet</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Recent Patients + Quick Actions -->
+<div class="grid-2" style="gap:24px;">
+  <!-- Recent Patients -->
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-user-injured text-cyan"></i> Recent Patients</div>
+      <a href="{% url 'add_patient' %}" class="btn btn-primary btn-sm" id="dash-add-patient">
+        <i class="fas fa-plus"></i> Add
+      </a>
+    </div>
+    {% if recent_patients %}
+      {% for patient in recent_patients %}
+      <a href="{% url 'patient_detail' patient.pk %}" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(26,115,232,0.07);">
+        <div class="patient-avatar" style="width:38px;height:38px;font-size:16px;border-radius:10px;">
+          {{ patient.first_name|first }}{{ patient.last_name|first }}
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:13px;color:var(--text-primary);">{{ patient.full_name }}</div>
+          <div style="font-size:11px;color:var(--text-muted);">{{ patient.patient_id }} · Age {{ patient.age }}</div>
+        </div>
+        <span class="badge badge-blue">{{ patient.scan_set.count|default:0 }} scans</span>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">👤</div>
+        <p>No patients registered. <a href="{% url 'add_patient' %}" style="color:var(--accent-cyan);">Add one now</a></p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card fade-in">
+    <div class="card-title mb-20"><i class="fas fa-bolt text-cyan"></i> Quick Actions</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <a href="{% url 'upload_scan' %}" class="btn btn-cyan btn-lg w-full" id="qa-analyze" style="justify-content:center;">
+        <i class="fas fa-x-ray"></i> Analyze New X-Ray
+      </a>
+      <a href="{% url 'add_patient' %}" class="btn btn-primary btn-lg w-full" id="qa-patient" style="justify-content:center;">
+        <i class="fas fa-user-plus"></i> Register New Patient
+      </a>
+      <a href="{% url 'scan_list' %}" class="btn btn-outline btn-lg w-full" id="qa-records" style="justify-content:center;">
+        <i class="fas fa-database"></i> View All Records
+      </a>
+    </div>
+
+    <!-- AI Info -->
+    <div style="margin-top:24px;padding:16px;background:rgba(26,115,232,0.06);border-radius:12px;border:1px solid rgba(26,115,232,0.15);">
+      <div style="font-size:12px;font-weight:700;color:var(--accent-cyan);margin-bottom:8px;letter-spacing:0.5px;">
+        🤖 AI MODEL INFO
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div style="font-size:10px;color:var(--text-muted);">Architecture</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-primary);">ResNet-50</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text-muted);">Classes</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-primary);">3 (COVID/Normal/PNM)</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text-muted);">Explainability</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-primary);">Grad-CAM</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text-muted);">Report</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-primary);">PDF Export</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if total_scans > 0 %}
+<script>
+// Simple donut chart using Canvas
+const canvas = document.getElementById('diagChart');
+if (canvas) {
+  const ctx = canvas.getContext('2d');
+  const data = [
+    { value: {{ covid_cases }}, color: '#f44336' },
+    { value: {{ normal_cases }}, color: '#00e676' },
+    { value: {{ pneumonia_cases }}, color: '#ff9100' },
+  ];
+  const total = data.reduce((s, d) => s + d.value, 0) || 1;
+  const cx = 100, cy = 100, outerR = 80, innerR = 52;
+  let angle = -Math.PI / 2;
+  data.forEach(d => {
+    const slice = (d.value / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, outerR, angle, angle + slice);
+    ctx.closePath();
+    ctx.fillStyle = d.color;
+    ctx.fill();
+    angle += slice;
+  });
+  // Donut hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
+  ctx.fillStyle = '#0d1f3c';
+  ctx.fill();
+  // Subtle border ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerR, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(26,115,232,0.15)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+</script>
+{% endif %}
+{% endblock %}
