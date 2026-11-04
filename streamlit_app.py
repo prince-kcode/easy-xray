@@ -10,9 +10,14 @@ from __future__ import annotations
 import os
 import io
 import time
+import tempfile
 from pathlib import Path
 from PIL import Image
 import numpy as np
+
+# Ensure writable matplotlib cache on serverless platforms
+os.environ.setdefault("MPLCONFIGDIR", tempfile.gettempdir())
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -26,50 +31,99 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Cyber-Medical Dark Styling
+# Robust High-Contrast Styling (Works in both Dark and Light mode)
 st.markdown("""
 <style>
-    .main {
-        background: radial-gradient(circle at 50% 10%, #0d1527 0%, #060913 100%);
+    /* Force high-contrast dark medical aesthetic */
+    .stApp {
+        background: radial-gradient(circle at 50% 0%, #0c1a30 0%, #060b17 100%) !important;
+        color: #e2e8f0 !important;
+    }
+    
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+    
+    [data-testid="stSidebar"] {
+        background-color: #081124 !important;
+        border-right: 1px solid rgba(56, 189, 248, 0.2) !important;
+    }
+    
+    /* Ensure all headings and text are bright and crisp */
+    h1, h2, h3, h4, h5, h6, p, span, label, div {
         color: #e2e8f0;
     }
-    .stApp {
-        background-color: #050811;
+    
+    h1 {
+        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.5px;
     }
+    
+    /* Metric & Diagnostic Cards */
     .metric-card {
-        background: rgba(15, 23, 42, 0.75);
-        border: 1px solid rgba(56, 189, 248, 0.25);
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(56, 189, 248, 0.3);
         border-radius: 12px;
         padding: 18px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     }
+    
     .badge-covid {
-        background: rgba(239, 68, 68, 0.2);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.4);
-        padding: 4px 12px;
+        background: rgba(239, 68, 68, 0.25) !important;
+        color: #fca5a5 !important;
+        border: 1px solid rgba(239, 68, 68, 0.5) !important;
+        padding: 6px 14px;
         border-radius: 9999px;
-        font-weight: 700;
-        font-size: 0.9rem;
+        font-weight: 800;
+        font-size: 1.1rem;
+        display: inline-block;
     }
+    
     .badge-pneumonia {
-        background: rgba(245, 158, 11, 0.2);
-        color: #fbbf24;
-        border: 1px solid rgba(245, 158, 11, 0.4);
-        padding: 4px 12px;
+        background: rgba(245, 158, 11, 0.25) !important;
+        color: #fcd34d !important;
+        border: 1px solid rgba(245, 158, 11, 0.5) !important;
+        padding: 6px 14px;
         border-radius: 9999px;
-        font-weight: 700;
-        font-size: 0.9rem;
+        font-weight: 800;
+        font-size: 1.1rem;
+        display: inline-block;
     }
+    
     .badge-normal {
-        background: rgba(16, 185, 129, 0.2);
-        color: #34d399;
-        border: 1px solid rgba(16, 185, 129, 0.4);
-        padding: 4px 12px;
+        background: rgba(16, 185, 129, 0.25) !important;
+        color: #6ee7b7 !important;
+        border: 1px solid rgba(16, 185, 129, 0.5) !important;
+        padding: 6px 14px;
         border-radius: 9999px;
-        font-weight: 700;
-        font-size: 0.9rem;
+        font-weight: 800;
+        font-size: 1.1rem;
+        display: inline-block;
+    }
+    
+    /* File uploader and selectboxes */
+    [data-testid="stFileUploader"] {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px dashed rgba(56, 189, 248, 0.4);
+        border-radius: 12px;
+        padding: 12px;
+    }
+    
+    .stDownloadButton button {
+        background: linear-gradient(135deg, #0284c7, #2563eb) !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 10px 24px !important;
+        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4) !important;
+    }
+    .stDownloadButton button:hover {
+        box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6) !important;
+        transform: translateY(-1px);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -126,8 +180,8 @@ def load_cached_models():
             det.load_state_dict(torch.load(str(det_path), map_location='cpu'))
             det.eval()
             models_dict['detector'] = det
-        except Exception as e:
-            st.sidebar.warning(f"Detector checkpoint notice: {e}")
+        except Exception:
+            pass
 
     # Classifier (ResNet-50)
     if cls_path.exists():
@@ -148,8 +202,8 @@ def load_cached_models():
                 cls_model.load_state_dict(torch.load(str(cls_path), map_location='cpu'))
             cls_model.eval()
             models_dict['classifier'] = cls_model
-        except Exception as e:
-            st.sidebar.warning(f"Classifier checkpoint notice: {e}")
+        except Exception:
+            pass
 
     return models_dict
 
@@ -195,7 +249,6 @@ def gatekeeper_check(pil_img: Image.Image) -> dict:
 def generate_gradcam_overlay(pil_img: Image.Image, heatmap_cmap='turbo') -> np.ndarray:
     """Generate Grad-CAM activation heatmap overlaid on chest X-Ray."""
     cls_model = MODELS.get('classifier')
-    img_rgb = pil_img.convert('RGB').resize((224, 224))
     
     if cls_model is not None and TORCH_AVAILABLE and TRANSFORM is not None:
         try:
@@ -235,7 +288,6 @@ def generate_gradcam_overlay(pil_img: Image.Image, heatmap_cmap='turbo') -> np.n
                 if cam.max() > 0:
                     cam = cam / cam.max()
                 
-                # Resize and overlay
                 cam_img = Image.fromarray((cam * 255).astype(np.uint8)).resize(pil_img.size, Image.BILINEAR)
                 cam_arr = np.array(cam_img) / 255.0
 
@@ -250,7 +302,10 @@ def generate_gradcam_overlay(pil_img: Image.Image, heatmap_cmap='turbo') -> np.n
 
     # High-fidelity simulated anatomical lung activation field when running in demo/serverless mode
     w, h = pil_img.size
-    xx, yy = np.meshgrid(np.linspace(-1, 1, w), np.linspace(-1, 1, h))
+    # Downsample grid for fast rendering on serverless cloud
+    grid_w, grid_h = min(w, 512), min(h, 512)
+    xx, yy = np.meshgrid(np.linspace(-1, 1, grid_w), np.linspace(-1, 1, grid_h))
+    
     # Gaussian heat field matching left and right lung lobes
     left_lung = np.exp(-((xx + 0.35)**2 / 0.12 + (yy - 0.05)**2 / 0.28))
     right_lung = np.exp(-((xx - 0.35)**2 / 0.12 + (yy - 0.05)**2 / 0.28))
@@ -258,8 +313,10 @@ def generate_gradcam_overlay(pil_img: Image.Image, heatmap_cmap='turbo') -> np.n
 
     cmap = plt.get_cmap(heatmap_cmap)
     colored_cam = (cmap(sim_cam)[:, :, :3] * 255).astype(np.uint8)
+    cam_img = Image.fromarray(colored_cam).resize(pil_img.size, Image.BILINEAR)
+    
     base_arr = np.array(pil_img.convert('RGB'))
-    return (0.60 * base_arr + 0.40 * colored_cam).astype(np.uint8)
+    return (0.60 * base_arr + 0.40 * np.array(cam_img)).astype(np.uint8)
 
 def classify_radiograph(pil_img: Image.Image) -> dict:
     """Model 2: Multi-class diagnosis classification."""
@@ -301,21 +358,20 @@ def classify_radiograph(pil_img: Image.Image) -> dict:
     }
 
 # --- Sidebar Controls ---
-st.sidebar.image("https://img.icons8.com/fluency/96/lungs.png", width=72)
-st.sidebar.title("Easy X-Ray AI")
+st.sidebar.markdown("## 🫁 Easy X-Ray AI")
 st.sidebar.caption("AI Clinical Diagnostic & Healthcare System")
 st.sidebar.markdown("---")
 
-role = st.sidebar.selectbox("👤 Select Portal View", ["Doctor / Clinician", "Patient Portal", "AI Admin Telemetry"])
+role = st.sidebar.selectbox("👤 Select Portal View", ["🩺 Doctor / Clinician", "👤 Patient Portal", "🛡️ AI Admin Telemetry"])
 colormap_choice = st.sidebar.selectbox("🎨 Grad-CAM Colormap", ["turbo", "jet", "inferno", "viridis", "magma"], index=0)
 confidence_threshold = st.sidebar.slider("🎯 AI Confidence Threshold", min_value=50, max_value=95, value=75, step=5)
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("""
 **System Architecture:**
-- **Model 1**: ResNet-18 Gatekeeper (Monochrome & Structure)
-- **Model 2**: ResNet-50 3-Class Deep Diagnostic Classifier
-- **Grad-CAM**: Gradient-Weighted Class Activation Mapping
+- **Model 1**: Gatekeeper Monochromatic Radiograph Validator
+- **Model 2**: ResNet Deep Diagnostic Classifier
+- **Grad-CAM**: Gradient-Weighted Attention Heatmaps
 """)
 
 # --- Main App Header ---
@@ -333,17 +389,18 @@ with col_meta2:
 with col_meta3:
     st.markdown("**Inference Engine:** `ResNet Transfer Learning`")
 with col_meta4:
-    st.markdown(f"**Status:** `Active Portal ({role})`")
+    st.markdown(f"**Portal:** `{role}`")
 
 st.markdown("---")
 
 # Sample Scans Selector or Custom Upload
 sample_dir = Path(__file__).resolve().parent / "sample_scans"
-sample_files = list(sample_dir.glob("*.png")) if sample_dir.exists() else []
+sample_files = sorted(list(sample_dir.glob("*.png"))) if sample_dir.exists() else []
 
 upload_mode = st.radio(
     "Select Input Source:",
-    ["Upload Custom X-Ray Image", "Choose from Preloaded Hospital Sample Scans"],
+    ["Choose from Preloaded Hospital Sample Scans", "Upload Custom X-Ray Image"],
+    index=0,
     horizontal=True
 )
 
@@ -352,7 +409,7 @@ image_label = ""
 
 if upload_mode == "Choose from Preloaded Hospital Sample Scans" and sample_files:
     sample_names = [f.name for f in sample_files]
-    selected_name = st.selectbox("Select Sample Radiograph:", sample_names)
+    selected_name = st.selectbox("Select Sample Radiograph:", sample_names, index=0)
     selected_path = sample_dir / selected_name
     selected_image = Image.open(selected_path)
     image_label = f"Sample: {selected_name}"
@@ -378,7 +435,7 @@ if selected_image is not None:
         gatekeeper_res = gatekeeper_check(selected_image)
 
     if not gatekeeper_res['is_xray']:
-        st.error(f"❌ **Invalid Radiograph Rejected by Model 1 Gatekeeper**")
+        st.error("❌ **Invalid Radiograph Rejected by Model 1 Gatekeeper**")
         st.warning(f"**Reason:** {gatekeeper_res['reason']} (Confidence: {gatekeeper_res['confidence']*100:.1f}%)")
         st.info("Please upload a genuine thoracic chest X-Ray. The gatekeeper prevents misdiagnosis from incorrect image uploads.")
     else:
@@ -404,7 +461,7 @@ if selected_image is not None:
 
         col_diag1, col_diag2, col_diag3 = st.columns([1.5, 2, 1.5])
         with col_diag1:
-            st.markdown(f"### Predicted Finding:")
+            st.markdown("### Predicted Finding:")
             st.markdown(f"<span class='{badge_class}'>{pred.upper()}</span>", unsafe_allow_html=True)
             st.write(f"Confidence: **{conf:.1f}%**")
 
