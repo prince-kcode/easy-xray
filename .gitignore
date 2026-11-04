@@ -33,7 +33,12 @@ archive.zip
 *.tgz
 *.rar
 *.7z
+*.csv
 data/
+thoracic_disease_classification/data/images/*
+!thoracic_disease_classification/data/images/.gitkeep
+thoracic_disease_classification/data/csv/*
+!thoracic_disease_classification/data/csv/.gitkeep
 
 # Large Model Weights (Binary Weights > 40MB)
 models/*.pth
@@ -42,6 +47,9 @@ models/*.bin
 models/*.onnx
 !models/README.md
 !models/.gitkeep
+thoracic_disease_classification/models/*.pth
+thoracic_disease_classification/models/*.pt
+!thoracic_disease_classification/models/.gitkeep
 
 # Runtime Media Uploads & Temp Files
 media/uploads/*
@@ -52,6 +60,14 @@ media/scans/*
 !media/heatmaps/.gitkeep
 !media/temp_val/.gitkeep
 !media/scans/.gitkeep
+
+# Outputs & Notebooks
+thoracic_disease_classification/outputs/plots/*
+!thoracic_disease_classification/outputs/plots/.gitkeep
+thoracic_disease_classification/outputs/results/*
+!thoracic_disease_classification/outputs/results/.gitkeep
+thoracic_disease_classification/notebooks/.ipynb_checkpoints/
+!thoracic_disease_classification/notebooks/.gitkeep
 
 # OS & IDE Cache
 .DS_Store

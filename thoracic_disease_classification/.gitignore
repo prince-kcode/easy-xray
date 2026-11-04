@@ -1,0 +1,46 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Datasets & Large Archives (Do NOT commit images, CSV data or ZIP archives)
+data/images/*
+!data/images/.gitkeep
+data/csv/*
+!data/csv/.gitkeep
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.csv
+
+# Model Checkpoints & Pretrained Weights
+models/*.pth
+models/*.pt
+models/*.bin
+models/*.onnx
+!models/.gitkeep
+
+# Experiment Outputs & Plots
+outputs/plots/*
+!outputs/plots/.gitkeep
+outputs/results/*
+!outputs/results/.gitkeep
+notebooks/.ipynb_checkpoints/
+!notebooks/.gitkeep
+
+# IDEs & System files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

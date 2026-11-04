@@ -91,8 +91,39 @@ easy_xray/
 ├── seed_demo_data.py       <- CLI script to populate clinical database
 ├── train.py                <- PyTorch training script for ResNet-50
 ├── train_detector.py       <- Gatekeeper chest X-ray classifier training script
+├── thoracic_disease_classification/ <- Multi-Label Thoracic Disease & Correlation Modeling
+│   ├── src/
+│   │   ├── compare_models.py <- Benchmark evaluation across architectures
+│   │   ├── dataset.py        <- NIH Chest X-Ray multi-label dataset loader
+│   │   ├── evaluate.py       <- Multi-label metrics (ROC-AUC, F1, Hamming Loss)
+│   │   ├── models.py         <- Binary Relevance, GCN, & Attention model architectures
+│   │   ├── preprocess.py     <- Label correlation matrix & graph adjacency builder
+│   │   ├── train.py          <- Multi-label model training pipeline
+│   │   └── utils.py          <- Checkpointing & visualization utilities
+│   ├── requirements.txt      <- ML dependencies
+│   └── README.md             <- Research documentation
 ├── manage.py               <- Django CLI
 └── start_dev.bat           <- Development launcher
+```
+
+---
+
+## 🧠 Multi-Label Thoracic Disease Research & Training
+
+The repository includes complete research implementations for 14-disease multi-label thoracic classification with label dependency modeling:
+- **Binary Relevance (BR)**: Baseline independent binary classifiers for each finding.
+- **Graph Convolutional Networks (GCN)**: Models co-occurrence topology via graph convolutions over correlation adjacency.
+- **Attention-Based Modeling**: Self-attention over label embeddings for joint finding reasoning.
+
+```bash
+# Run Multi-Label Training
+python thoracic_disease_classification/src/train.py --model br
+python thoracic_disease_classification/src/train.py --model gcn
+python thoracic_disease_classification/src/train.py --model attention
+
+# Benchmark & Compare Models
+python thoracic_disease_classification/src/compare_models.py
+```
 ```
 
 ---
