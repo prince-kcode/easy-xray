@@ -11,3 +11,4 @@ python train.py --epochs 10 --batch_size 32
 python train_detector.py --epochs 5
 ```
 Weights are excluded from Git repository to ensure fast and lightweight version control.
+
