@@ -125,6 +125,31 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6) !important;
         transform: translateY(-1px);
     }
+
+    /* Mobile & Tablet Responsiveness */
+    @media (max-width: 768px) {
+        .stApp {
+            padding: 10px 4px !important;
+        }
+        [data-testid="column"] {
+            min-width: 100% !important;
+            flex: 1 1 100% !important;
+            margin-bottom: 14px !important;
+        }
+        .badge-covid, .badge-normal, .badge-pneumonia {
+            font-size: 0.95rem !important;
+            padding: 5px 12px !important;
+        }
+        h1 {
+            font-size: 1.55rem !important;
+        }
+        h2, h3 {
+            font-size: 1.2rem !important;
+        }
+        [data-testid="stFileUploader"] {
+            padding: 8px !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 

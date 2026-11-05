@@ -391,4 +391,13 @@ def predict_xray(image_path):
 
     except Exception as e:
         print(f"[predict_xray] Error: {e}")
-        return demo_predict(image_path)
+        res = demo_predict(image_path)
+        try:
+            img_arr = np.array(Image.open(image_path).convert('RGB').resize((224, 224)))
+            gray = cv2.cvtColor(img_arr, cv2.COLOR_RGB2GRAY).astype(np.float32) / 255.0
+            cam_demo = cv2.GaussianBlur(gray, (21, 21), 0)
+            overlay = overlay_heatmap_on_image(image_path, cam_demo)
+            res['heatmap_path'] = save_heatmap_image(overlay)
+        except Exception:
+            res['heatmap_path'] = ''
+        return res

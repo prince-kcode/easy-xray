@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, NavLink, useNavigate } from 'react-router-dom'
 import './index.css'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import SettingsModal from './components/SettingsModal'
@@ -16,99 +16,109 @@ import ScanList from './pages/ScanList'
 import PatientPortal from './pages/PatientPortal'
 import AdminDashboard from './pages/AdminDashboard'
 
-function Sidebar() {
+function Sidebar({ isOpen, onClose }) {
   const { currentUser } = useAuth()
   const role = currentUser?.role || 'doctor'
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-brand">
-        <div className="sidebar-logo">🫁</div>
-        <div>
-          <div className="sidebar-title">Easy X-Ray</div>
-          <div className="sidebar-sub">AI Diagnostic System</div>
+    <>
+      {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="sidebar-brand">
+          <div className="sidebar-logo">🫁</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="sidebar-title">Easy X-Ray</div>
+            <div className="sidebar-sub">AI Diagnostic System</div>
+          </div>
+          <button
+            className="sidebar-close-btn"
+            onClick={onClose}
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
         </div>
-      </div>
 
-      <nav className="sidebar-nav">
-        {/* DOCTOR NAVIGATION */}
-        {role === 'doctor' && (
-          <>
-            <div className="nav-label">Clinical Workflow</div>
-            <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">📊</span> Clinical Dashboard
-            </NavLink>
-            <NavLink to="/scan/upload" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">🔬</span> Analyze X-Ray
-            </NavLink>
-            <NavLink to="/scans" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">📋</span> Scan Records
-            </NavLink>
-            <div className="nav-label" style={{ marginTop: 12 }}>Patient Records</div>
-            <NavLink to="/patients" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">👥</span> All Patients
-            </NavLink>
-            <NavLink to="/patients/add" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">➕</span> Register Patient
-            </NavLink>
-          </>
-        )}
+        <nav className="sidebar-nav">
+          {/* DOCTOR NAVIGATION */}
+          {role === 'doctor' && (
+            <>
+              <div className="nav-label">Clinical Workflow</div>
+              <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">📊</span> Clinical Dashboard
+              </NavLink>
+              <NavLink to="/scan/upload" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">🔬</span> Analyze X-Ray
+              </NavLink>
+              <NavLink to="/scans" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">📋</span> Scan Records
+              </NavLink>
+              <div className="nav-label" style={{ marginTop: 12 }}>Patient Records</div>
+              <NavLink to="/patients" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">👥</span> All Patients
+              </NavLink>
+              <NavLink to="/patients/add" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">➕</span> Register Patient
+              </NavLink>
+            </>
+          )}
 
-        {/* PATIENT NAVIGATION */}
-        {role === 'patient' && (
-          <>
-            <div className="nav-label">Patient Portal</div>
-            <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">🏠</span> My Health Summary
-            </NavLink>
-            <NavLink to="/my-scans" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">🫁</span> My Scans & Reports
-            </NavLink>
-            <div className="nav-label" style={{ marginTop: 12 }}>Account</div>
-            <NavLink to="/profile" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">👤</span> My Patient Profile
-            </NavLink>
-          </>
-        )}
+          {/* PATIENT NAVIGATION */}
+          {role === 'patient' && (
+            <>
+              <div className="nav-label">Patient Portal</div>
+              <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">🏠</span> My Health Summary
+              </NavLink>
+              <NavLink to="/my-scans" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">🫁</span> My Scans & Reports
+              </NavLink>
+              <div className="nav-label" style={{ marginTop: 12 }}>Account</div>
+              <NavLink to="/profile" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">👤</span> My Patient Profile
+              </NavLink>
+            </>
+          )}
 
-        {/* ADMIN NAVIGATION */}
-        {role === 'admin' && (
-          <>
-            <div className="nav-label">Administration</div>
-            <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">🛡️</span> Admin Overview
-            </NavLink>
-            <NavLink to="/scans" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">📋</span> Scan Logs & Audits
-            </NavLink>
-            <NavLink to="/patients" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">👥</span> Patient Directory
-            </NavLink>
-            <NavLink to="/scan/upload" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <span className="nav-icon">🔬</span> AI Pipeline Test
-            </NavLink>
-          </>
-        )}
-      </nav>
+          {/* ADMIN NAVIGATION */}
+          {role === 'admin' && (
+            <>
+              <div className="nav-label">Administration</div>
+              <NavLink to="/" end className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">🛡️</span> Admin Overview
+              </NavLink>
+              <NavLink to="/scans" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">📋</span> Scan Logs & Audits
+              </NavLink>
+              <NavLink to="/patients" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">👥</span> Patient Directory
+              </NavLink>
+              <NavLink to="/scan/upload" className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`} onClick={onClose}>
+                <span className="nav-icon">🔬</span> AI Pipeline Test
+              </NavLink>
+            </>
+          )}
+        </nav>
 
-      <div className="sidebar-footer">
-        <div className="ai-badge">
-          <div className="ai-dot" />
-          <div>
-            <div className="ai-text">
-              {role === 'patient' ? 'Patient Portal' : (role === 'admin' ? 'Admin Ops Active' : 'AI Engine Active')}
-            </div>
-            <div className="ai-sub">
-              {role === 'patient' ? 'ID: PID-B83104' : 'ResNet-50 · Grad-CAM'}
+        <div className="sidebar-footer">
+          <div className="ai-badge">
+            <div className="ai-dot" />
+            <div>
+              <div className="ai-text">
+                {role === 'patient' ? 'Patient Portal' : (role === 'admin' ? 'Admin Ops Active' : 'AI Engine Active')}
+              </div>
+              <div className="ai-sub">
+                {role === 'patient' ? 'ID: PID-B83104' : 'ResNet-50 · Grad-CAM'}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   )
 }
 
-function Header({ title, onOpenSettings }) {
+function Header({ title, onOpenSettings, onToggleSidebar }) {
   const { currentUser, switchRole, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
@@ -132,23 +142,33 @@ function Header({ title, onOpenSettings }) {
 
   return (
     <header className="header">
-      <div className="breadcrumb">
-        <span>🏠</span>
-        <span style={{ color: 'var(--text-muted)' }}>/</span>
-        <span>{title}</span>
-        <span className={`profile-role-tag ${roleTagClass}`} style={{ marginLeft: 8 }}>
-          {currentUser?.role?.toUpperCase()} PORTAL
-        </span>
+      <div className="header-left">
+        <button
+          className="mobile-menu-btn"
+          onClick={onToggleSidebar}
+          aria-label="Toggle navigation menu"
+        >
+          ☰
+        </button>
+
+        <div className="breadcrumb">
+          <span>🏠</span>
+          <span className="breadcrumb-sep">/</span>
+          <span className="breadcrumb-title">{title}</span>
+          <span className={`profile-role-tag ${roleTagClass} breadcrumb-role`}>
+            {currentUser?.role?.toUpperCase()}
+          </span>
+        </div>
       </div>
 
       <div className="header-right">
         {currentUser?.role !== 'patient' ? (
-          <button className="btn btn-cyan btn-sm" onClick={() => navigate('/scan/upload')}>
-            ＋ New Scan
+          <button className="btn btn-cyan btn-sm header-action-btn" onClick={() => navigate('/scan/upload')}>
+            ＋ <span className="btn-text">New Scan</span>
           </button>
         ) : (
-          <button className="btn btn-outline btn-sm" onClick={() => navigate('/')}>
-            📋 My Medical Records
+          <button className="btn btn-outline btn-sm header-action-btn" onClick={() => navigate('/')}>
+            📋 <span className="btn-text">My Records</span>
           </button>
         )}
 
@@ -162,7 +182,7 @@ function Header({ title, onOpenSettings }) {
             <div className="avatar">
               {currentUser?.avatar || 'DR'}
             </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+            <span className="profile-user-name">
               {currentUser?.name ? currentUser.name.split(' ')[0] : 'User'}
             </span>
             <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>▼</span>
@@ -246,48 +266,52 @@ function Header({ title, onOpenSettings }) {
 
 function MainRoutes({ onOpenSettings }) {
   const { currentUser } = useAuth()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const role = currentUser?.role || 'doctor'
+
+  const toggleSidebar = () => setSidebarOpen(prev => !prev)
+  const closeSidebar = () => setSidebarOpen(false)
 
   return (
     <div className="layout">
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
       <div className="main">
         {/* DOCTOR ROUTES */}
         {role === 'doctor' && (
           <Routes>
-            <Route path="/" element={<><Header title="Clinical Dashboard" onOpenSettings={onOpenSettings} /><Dashboard /></>} />
-            <Route path="/patients" element={<><Header title="Patients" onOpenSettings={onOpenSettings} /><Patients /></>} />
-            <Route path="/patients/add" element={<><Header title="Register Patient" onOpenSettings={onOpenSettings} /><AddPatient /></>} />
-            <Route path="/patients/:id" element={<><Header title="Patient Detail" onOpenSettings={onOpenSettings} /><PatientDetail /></>} />
-            <Route path="/scan/upload" element={<><Header title="Analyze X-Ray" onOpenSettings={onOpenSettings} /><UploadScan /></>} />
-            <Route path="/scan/:id" element={<><Header title="Scan Result" onOpenSettings={onOpenSettings} /><ScanResult /></>} />
-            <Route path="/scans" element={<><Header title="Scan Records" onOpenSettings={onOpenSettings} /><ScanList /></>} />
-            <Route path="*" element={<><Header title="Clinical Dashboard" onOpenSettings={onOpenSettings} /><Dashboard /></>} />
+            <Route path="/" element={<><Header title="Clinical Dashboard" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><Dashboard /></>} />
+            <Route path="/patients" element={<><Header title="Patients" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><Patients /></>} />
+            <Route path="/patients/add" element={<><Header title="Register Patient" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><AddPatient /></>} />
+            <Route path="/patients/:id" element={<><Header title="Patient Detail" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><PatientDetail /></>} />
+            <Route path="/scan/upload" element={<><Header title="Analyze X-Ray" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><UploadScan /></>} />
+            <Route path="/scan/:id" element={<><Header title="Scan Result" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><ScanResult /></>} />
+            <Route path="/scans" element={<><Header title="Scan Records" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><ScanList /></>} />
+            <Route path="*" element={<><Header title="Clinical Dashboard" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><Dashboard /></>} />
           </Routes>
         )}
 
         {/* PATIENT ROUTES */}
         {role === 'patient' && (
           <Routes>
-            <Route path="/" element={<><Header title="My Health Portal" onOpenSettings={onOpenSettings} /><PatientPortal /></>} />
-            <Route path="/my-scans" element={<><Header title="My Scans & Reports" onOpenSettings={onOpenSettings} /><PatientPortal /></>} />
-            <Route path="/profile" element={<><Header title="My Patient Profile" onOpenSettings={onOpenSettings} /><PatientPortal /></>} />
-            <Route path="/scan/:id" element={<><Header title="Scan Report Detail" onOpenSettings={onOpenSettings} /><ScanResult /></>} />
-            <Route path="*" element={<><Header title="My Health Portal" onOpenSettings={onOpenSettings} /><PatientPortal /></>} />
+            <Route path="/" element={<><Header title="My Health Portal" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><PatientPortal /></>} />
+            <Route path="/my-scans" element={<><Header title="My Scans & Reports" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><PatientPortal /></>} />
+            <Route path="/profile" element={<><Header title="My Patient Profile" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><PatientPortal /></>} />
+            <Route path="/scan/:id" element={<><Header title="Scan Report Detail" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><ScanResult /></>} />
+            <Route path="*" element={<><Header title="My Health Portal" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><PatientPortal /></>} />
           </Routes>
         )}
 
         {/* ADMIN ROUTES */}
         {role === 'admin' && (
           <Routes>
-            <Route path="/" element={<><Header title="Admin Control Center" onOpenSettings={onOpenSettings} /><AdminDashboard /></>} />
-            <Route path="/admin/telemetry" element={<><Header title="AI Telemetry & Logs" onOpenSettings={onOpenSettings} /><AdminDashboard /></>} />
-            <Route path="/patients" element={<><Header title="Patients Directory" onOpenSettings={onOpenSettings} /><Patients /></>} />
-            <Route path="/patients/:id" element={<><Header title="Patient Detail" onOpenSettings={onOpenSettings} /><PatientDetail /></>} />
-            <Route path="/scan/upload" element={<><Header title="AI Pipeline Verification" onOpenSettings={onOpenSettings} /><UploadScan /></>} />
-            <Route path="/scan/:id" element={<><Header title="Scan Audit View" onOpenSettings={onOpenSettings} /><ScanResult /></>} />
-            <Route path="/scans" element={<><Header title="All Scans & Audit Trail" onOpenSettings={onOpenSettings} /><ScanList /></>} />
-            <Route path="*" element={<><Header title="Admin Control Center" onOpenSettings={onOpenSettings} /><AdminDashboard /></>} />
+            <Route path="/" element={<><Header title="Admin Control Center" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><AdminDashboard /></>} />
+            <Route path="/admin/telemetry" element={<><Header title="AI Telemetry & Logs" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><AdminDashboard /></>} />
+            <Route path="/patients" element={<><Header title="Patients Directory" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><Patients /></>} />
+            <Route path="/patients/:id" element={<><Header title="Patient Detail" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><PatientDetail /></>} />
+            <Route path="/scan/upload" element={<><Header title="AI Pipeline Verification" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><UploadScan /></>} />
+            <Route path="/scan/:id" element={<><Header title="Scan Audit View" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><ScanResult /></>} />
+            <Route path="/scans" element={<><Header title="All Scans & Audit Trail" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><ScanList /></>} />
+            <Route path="*" element={<><Header title="Admin Control Center" onOpenSettings={onOpenSettings} onToggleSidebar={toggleSidebar} /><AdminDashboard /></>} />
           </Routes>
         )}
       </div>

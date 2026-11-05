@@ -338,13 +338,107 @@ table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .scan-thumb { width: 48px; height: 48px; border-radius: 9px; object-fit: cover; border: 1px solid var(--border); background: #000; flex-shrink: 0; }
 .patient-avatar { width: 44px; height: 44px; border-radius: 11px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: white; flex-shrink: 0; }
 
+/* Mobile navigation toggles & overlay */
+.mobile-menu-btn {
+  display: none;
+  background: rgba(26,115,232,0.1);
+  border: 1px solid var(--border);
+  color: var(--accent-cyan);
+  font-size: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.sidebar-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-left: auto;
+}
+.sidebar-close-btn:hover { color: var(--accent-red); background: rgba(255,23,68,0.1); }
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,13,26,0.8);
+  backdrop-filter: blur(5px);
+  z-index: 998;
+  animation: fadeIn 0.2s ease;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
 @media (max-width: 768px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
-  .sidebar { transform: translateX(-100%); }
+  .mobile-menu-btn { display: inline-flex; }
+  .sidebar-close-btn { display: inline-block; }
+  
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    box-shadow: 12px 0 35px rgba(0,0,0,0.85);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
   .main { margin-left: 0; }
-  .page { padding: 16px; }
-  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .page { padding: 14px; }
+  .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .header { padding: 0 12px; }
+  .breadcrumb-sep, .breadcrumb-role { display: none; }
+  .breadcrumb-title { font-size: 13px; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-user-name { display: none; }
+  .header-action-btn .btn-text { display: none; }
+  .header-action-btn { padding: 6px 10px; }
+  
+  .role-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .patient-hero-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 18px;
+    gap: 14px;
+  }
+  .patient-hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .profile-dropdown {
+    width: calc(100vw - 24px);
+    right: -10px;
+  }
+  .modal-box {
+    margin: 12px;
+    max-width: calc(100vw - 24px);
+    max-height: 85vh;
+  }
+  .modal-tabs {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .patient-vitals-grid { grid-template-columns: 1fr; }
 }
 
 

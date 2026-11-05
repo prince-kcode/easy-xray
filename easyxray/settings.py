@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+os.environ.setdefault('MPLCONFIGDIR', str(BASE_DIR / 'media' / 'temp_val'))
 
 SECRET_KEY = 'easy-xray-secret-key-change-in-production-2024'
 
